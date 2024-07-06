@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; }
+        nav { background-color: #333; overflow: hidden; }
+        nav ul { list-style-type: none; margin: 0; padding: 0; }
+        nav ul li { float: left; }
+        nav ul li a { display: block; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
+        nav ul li a:hover { background-color: #111; }
+        .container { width: 80%; margin: 0 auto; padding-top: 20px; }
+        .welcome { text-align: center; margin-bottom: 40px; }
+        h1 { color: #333; }
+        .book-list { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .book-card { background-color: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); overflow: hidden; width: 250px; text-align: center; }
+        .book-card img { width: 100%; height: auto; }
+        .book-card h3, .book-card p { margin: 10px 0; }
+        .book-card button { background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
+        .book-card button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="customers.html">Customers</a></li>
+            <li><a href="loans.html">Loans</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="welcome">
+            <h1>Welcome to the Library</h1>
+            <p>Explore our collection of books below</p>
+        </div>
+        <div class="book-list" id="book-list"></div>
+    </div>
+
+    <script>
+        function getBooks() {
+            axios.get('http://127.0.0.1:5000/books')
+                .then(function(response) {
+                    const bookList = document.getElementById('book-list');
+                    bookList.innerHTML = '';
+                    response.data.forEach(function(book) {
+                        const bookCard = document.createElement('div');
+                        bookCard.classList.add('book-card');
+                        bookCard.innerHTML = `
+                            <img src="${book.img}" alt="${book.name}">
+                            <h3>${book.name}</h3>
+                            <p>Author: ${book.author}</p>
+                            <p>Year: ${book.year_published}</p>
+                            <p>Type: ${book.type}</p>
+                            <button onclick="rentBook(${book.id})">Rent Book</button>
+                        `;
+                        bookList.appendChild(bookCard);
+                    });
+                })
+                .catch(function(error) {
+                    alert('Error fetching books: ' + error.message);
+                });
+        }
+
+        function rentBook(bookId) {
+            // Implement the logic for renting a book here
+            alert('Renting book with ID: ' + bookId);
+        }
+
+        document.addEventListener('DOMContentLoaded', getBooks);
+    </script>
+</body>
+</html>

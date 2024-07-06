@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Manage Books</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        nav { background-color: #333; overflow: hidden; }
+        nav ul { list-style-type: none; margin: 0; padding: 0; }
+        nav ul li { float: left; }
+        nav ul li a { display: block; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
+        nav ul li a:hover { background-color: #111; }
+        .container { width: 80%; margin: 0 auto; padding-top: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; }
+        input, button { width: 100%; padding: 10px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 15px; text-align: left; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="customers.html">Customers</a></li>
+            <li><a href="loans.html">Loans</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Manage Books</h1>
+        <h2>Add a New Book</h2>
+        <form id="add-book-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Book Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="author">Author:</label>
+                <input type="text" id="author" name="author" required>
+            </div>
+            <div class="form-group">
+                <label for="year_published">Year Published:</label>
+                <input type="number" id="year_published" name="year_published" required>
+            </div>
+            <div class="form-group">
+                <label for="type">Type:</label>
+                <input type="number" id="type" name="type" required>
+            </div>
+            <div class="form-group">
+                <label for="img">Upload Image:</label>
+                <input type="file" id="img" name="img" required>
+            </div>
+            <button type="submit">Add Book</button>
+        </form>
+
+        <h2>Books List</h2>
+        <button onclick="getBooks()">Get Books</button>
+        <table id="books-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Author</th>
+                    <th>Year Published</th>
+                    <th>Type</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('add-book-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('author', document.getElementById('author').value);
+            formData.append('year_published', document.getElementById('year_published').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('img', document.getElementById('img').files[0]);
+
+            axios.post('http://127.0.0.1:5000/add_book', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+                .then(function(response) {
+                    alert('Book added successfully!');
+                    getBooks();
+                })
+                .catch(function(error) {
+                    alert('Error adding book: ' + (error.response ? error.response.data.error : error.message));
+                });
+        });
+
+        function getBooks() {
+            axios.get('http://127.0.0.1:5000/books')
+                .then(function(response) {
+                    const booksTable = document.getElementById('books-table').getElementsByTagName('tbody')[0];
+                    booksTable.innerHTML = '';
+                    response.data.forEach(function(book) {
+                        const row = booksTable.insertRow();
+                        row.insertCell(0).innerText = book.id;
+                        row.insertCell(1).innerText = book.name;
+                        row.insertCell(2).innerText = book.author;
+                        row.insertCell(3).innerText = book.year_published;
+                        row.insertCell(4).innerText = book.type;
+                        row.insertCell(5).innerHTML = `<img src="${book.img}" alt="${book.name}" style="width:50px;height:50px;">`;
+                        row.insertCell(6).innerHTML = `
+                            <button onclick="updateBook(${book.id})">Update</button>
+                            <button onclick="deleteBook(${book.id})">Delete</button>
+                        `;
+                    });
+                })
+                .catch(function(error) {
+                    alert('Error fetching books: ' + error.message);
+                });
+        }
+
+        function deleteBook(bookId) {
+            axios.delete(`http://127.0.0.1:5000/books/${bookId}`)
+                .then(response => {
+                    alert('Book deleted successfully');
+                    getBooks();
+                })
+                .catch(error => {
+                    alert('Error deleting book: ' + (error.response ? error.response.data.error : error.message));
+                });
+        }
+
+        function updateBook(bookId) {
+            const bookData = prompt('Enter the updated book data as JSON:', '{}');
+            try {
+                const updatedBook = JSON.parse(bookData);
+                axios.put(`http://127.0.0.1:5000/books/${bookId}`, updatedBook)
+                    .then(function(response) {
+                        alert('Book updated successfully!');
+                        getBooks();
+                    })
+                    .catch(function(error) {
+                        alert('Error updating book: ' + (error.response ? error.response.data.error : error.message));
+                    });
+            } catch (e) {
+                alert('Invalid JSON format.');
+            }
+        }
+    </script>
+</body>
+</html>

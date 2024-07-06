@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Manage Customers</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        nav { background-color: #333; overflow: hidden; }
+        nav ul { list-style-type: none; margin: 0; padding: 0; }
+        nav ul li { float: left; }
+        nav ul li a { display: block; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
+        nav ul li a:hover { background-color: #111; }
+        .container { width: 80%; margin: 0 auto; padding-top: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; }
+        input, button { width: 100%; padding: 10px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 15px; text-align: left; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="customers.html">Customers</a></li>
+            <li><a href="loans.html">Loans</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>Manage Customers</h1>
+        <h2>Add a New Customer</h2>
+        <form id="add-customer-form">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city" name="city" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required>
+            </div>
+            <div class="form-group">
+                <label for="mail">Email:</label>
+                <input type="email" id="mail" name="mail" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <input type="text" id="gender" name="gender" required>
+            </div>
+            <button type="submit">Add Customer</button>
+        </form>
+
+        <h2>Customers List</h2>
+        <button onclick="getCustomers()">Get Customers</button>
+        <table id="customers-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Age</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('add-customer-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const customerData = {
+                name: document.getElementById('name').value,
+                city: document.getElementById('city').value,
+                age: document.getElementById('age').value,
+                mail: document.getElementById('mail').value,
+                gender: document.getElementById('gender').value,
+            };
+
+            axios.post('http://127.0.0.1:5000/add_customer', customerData)
+                .then(function(response) {
+                    alert('Customer added successfully!');
+                    getCustomers();
+                })
+                .catch(function(error) {
+                    alert('Error adding customer: ' + (error.response ? error.response.data.error : error.message));
+                });
+        });
+
+        function getCustomers() {
+            axios.get('http://127.0.0.1:5000/customers')
+                .then(function(response) {
+                    const customersTable = document.getElementById('customers-table').getElementsByTagName('tbody')[0];
+                    customersTable.innerHTML = '';
+                    response.data.forEach(function(customer) {
+                        const row = customersTable.insertRow();
+                        row.insertCell(0).innerText = customer.id;
+                        row.insertCell(1).innerText = customer.name;
+                        row.insertCell(2).innerText = customer.city;
+                        row.insertCell(3).innerText = customer.age;
+                        row.insertCell(4).innerText = customer.mail;
+                        row.insertCell(5).innerText = customer.gender;
+                        row.insertCell(6).innerHTML = `
+                            <button onclick="updateCustomer(${customer.id})">Update</button>
+                            <button onclick="deleteCustomer(${customer.id})">Delete</button>
+                        `;
+                    });
+                })
+                .catch(function(error) {
+                    alert('Error fetching customers: ' + error.message);
+                });
+        }
+
+        function deleteCustomer(customerId) {
+            axios.delete(`http://127.0.0.1:5000/customers/${customerId}`)
+                .then(response => {
+                    alert('Customer deleted successfully');
+                    getCustomers();
+                })
+                .catch(error => {
+                    alert('Error deleting customer: ' + (error.response ? error.response.data.error : error.message));
+                });
+        }
+
+        function updateCustomer(customerId) {
+            const customerData = prompt('Enter the updated customer data as JSON:', '{}');
+            try {
+                const updatedCustomer = JSON.parse(customerData);
+                axios.put(`http://127.0.0.1:5000/customers/${customerId}`, updatedCustomer)
+                    .then(function(response) {
+                        alert('Customer updated successfully!');
+                        getCustomers();
+                    })
+                    .catch(function(error) {
+                        alert('Error updating customer: ' + (error.response ? error.response.data.error : error.message));
+                    });
+            } catch (e) {
+                alert('Invalid JSON format.');
+            }
+        }
+    </script>
+</body>
+</html>
